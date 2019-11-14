@@ -23,6 +23,7 @@
     },
     "dependencies": {
         "express": "^4.17.1",
+        "js2xmlparser": "^4.0.0",
         "sqlite": "^3.0.3",
         "sqlite3": "^4.1.0"
     }
