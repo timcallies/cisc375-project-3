@@ -22,8 +22,7 @@ var db = new sqlite3.Database(db_filename, sqlite3.OPEN_READONLY, (err) => {
     }
     else {
         console.log('Now connected to ' + db_filename);
-        getIncidentsFromDB("2019-10-10",null,null,null,"3",5,'xml');
-
+        addIncident(5,"2019-11-14","00:00:00",404,"Robbery",2,2,"SUMMIT AVE");
     }
 });
 
@@ -160,3 +159,20 @@ function getIncidentsFromDB(start_date, end_date, code, grid, neighborhood,
             });
         });
     }
+
+function addIncident(case_number, date, time, code, incident, police_grid,
+    neighborhood_number, block) {
+    return new Promise((resolve, reject) => {
+        let sql = `
+            INSERT INTO Incidents (case_number,date_time,code,incident,police_grid,neighborhood_number,block)
+            VALUES ('${case_number}','${date+"T"+time}',${code},'${incident}',${police_grid},${neighborhood_number},'${block}');
+        `;
+
+        console.log(sql);
+
+        db.run(sql, (err) => {
+            console.log(err);
+        });
+        
+    });
+}
