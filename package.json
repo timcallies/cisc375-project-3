@@ -1,0 +1,29 @@
+{
+    "name": "restful-server",
+    "version": "0.0.0",
+    "description": "RESTful Web Server using Node JS",
+    "author": {
+        "name": "Tim Callies",
+        "email": "call3675@stthomas.edu"
+    },
+    "contributors": [
+        {
+            "name": "Rachel Rautio",
+            "email": "raut5682@stthomas.edu"
+        },
+        {
+            "name": "Tommy Marrinan",
+            "email": "tmarrinan@stthomas.edu"
+        }
+    ],
+    "main": "server.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/timcallies/cisc375-project-3"
+    },
+    "dependencies": {
+        "express": "^4.17.1",
+        "sqlite": "^3.0.3",
+        "sqlite3": "^4.1.0"
+    }
+}
