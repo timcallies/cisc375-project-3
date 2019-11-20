@@ -61,6 +61,7 @@ function getCodesFromDB(code, format) {
     });
 }
 
+
 function getNeighborhoodFromDB(id, format) {
     return new Promise((resolve, reject) => {
         let sql = "SELECT * FROM Neighborhoods";
@@ -165,15 +166,23 @@ function getIncidentsFromDB(start_date, end_date, code, grid, neighborhood,
 function addIncident(case_number, date, time, code, incident, police_grid,
     neighborhood_number, block) {
     return new Promise((resolve, reject) => {
-        let sql = `
-            INSERT INTO Incidents (case_number,date_time,code,incident,police_grid,neighborhood_number,block)
+		getIncidentsFromDB(null, null, code, null, null, null, null).then({
+			if(data.length != 2)
+			{
+				reject("Data already in database");
+			}
+		});
+        let sql = INSERT INTO Incidents (case_number,date_time,code,incident,police_grid,neighborhood_number,block)
             VALUES ('${case_number}','${date+"T"+time}',${code},'${incident}',${police_grid},${neighborhood_number},'${block}');
-        `;
-		
-		
-
+			
 
         db.run(sql, (err) => {
+			if(err) {
+				reject(err);
+			}
+			else{
+				
+			}
         });
         
     });
