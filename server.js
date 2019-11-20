@@ -1,6 +1,7 @@
 // Built-in Node.js modules
 var fs = require('fs')
 var path = require('path')
+var bodyParser = require('body-parser');
 
 // NPM modules
 var express = require('express');
@@ -13,6 +14,7 @@ var app = express();
 var port = 8000;
 var server = app.listen(port);
 console.log("Server running on port "+port);
+app.use(bodyParser.urlencoded({extended: true}));
 
 // Open the database
 var db_filename = path.join(__dirname, 'stpaul_crime.sqlite3');
@@ -167,6 +169,8 @@ function addIncident(case_number, date, time, code, incident, police_grid,
             INSERT INTO Incidents (case_number,date_time,code,incident,police_grid,neighborhood_number,block)
             VALUES ('${case_number}','${date+"T"+time}',${code},'${incident}',${police_grid},${neighborhood_number},'${block}');
         `;
+		
+		
 
 
         db.run(sql, (err) => {
