@@ -16,13 +16,13 @@ console.log("Server running on port "+port);
 
 // Open the database
 var db_filename = path.join(__dirname, 'stpaul_crime.sqlite3');
-var db = new sqlite3.Database(db_filename, sqlite3.OPEN_READONLY, (err) => {
+var db = new sqlite3.Database(db_filename, sqlite3.OPEN_READWRITE, (err) => {
     if (err) {
         console.log('Error opening ' + db_filename);
     }
     else {
         console.log('Now connected to ' + db_filename);
-        addIncident(5,"2019-11-14","00:00:00",404,"Robbery",2,2,"SUMMIT AVE");
+        //addIncident(5,"2019-11-14","00:00:00",404,"Robbery",2,2,"SUMMIT AVE");
     }
 });
 
@@ -168,10 +168,8 @@ function addIncident(case_number, date, time, code, incident, police_grid,
             VALUES ('${case_number}','${date+"T"+time}',${code},'${incident}',${police_grid},${neighborhood_number},'${block}');
         `;
 
-        console.log(sql);
 
         db.run(sql, (err) => {
-            console.log(err);
         });
         
     });
