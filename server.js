@@ -6,10 +6,11 @@ var path = require('path')
 var express = require('express');
 var sqlite3 = require('sqlite3');
 var js2xmlparser = require("js2xmlparser");
-
+var bodyParser = require('body-parser');
 
 // Initialize the server
 var app = express();
+app.use(bodyParser.urlencoded({ extended: true }));
 var port = 8000;
 var server = app.listen(port);
 console.log("Server running on port "+port);
@@ -22,11 +23,28 @@ var db = new sqlite3.Database(db_filename, sqlite3.OPEN_READWRITE, (err) => {
     }
     else {
         console.log('Now connected to ' + db_filename);
-        //addIncident(5,"2019-11-14","00:00:00",404,"Robbery",2,2,"SUMMIT AVE");
     }
 });
 
+//Request to get the codes from the DB
+app.get("/codes", (req,res) => {
+    getCodesFromDB(req.query.code, req.query.format).then((data) => {
+        if(req.query.format == 'xml') {
+            res.writeHead(200, {'Content-Type': 'application/xml'});
+        }
+        else {
+            res.writeHead(200, {'Content-Type': 'application/json'});
+        }
+        res.write(data);
+        res.end();
+    }).catch((err) => {
+        res.writeHead(500, {'Content-Type': 'text/plain'});
+        res.write(err);
+        res.end();
+    })
+});
 
+//Function to get the codes from the DB
 function getCodesFromDB(code, format) {
     return new Promise((resolve, reject) => {
         let sql = "SELECT * FROM Codes";
@@ -45,10 +63,10 @@ function getCodesFromDB(code, format) {
                     output[thisCodeId] = thisCode['incident_type'];
                 }
                 
-                if (format === "json" || format === null) {
+                if (format == "json" || format == null) {
                     resolve(JSON.stringify(output));
                 }
-                else if (format === "xml") {
+                else if (format == "xml") {
                     resolve(js2xmlparser.parse("codes", output));
                 }
                 else {
@@ -59,10 +77,29 @@ function getCodesFromDB(code, format) {
     });
 }
 
+//Request to get the neighborhoods from the DB
+app.get("/neighborhoods", (req,res) => {
+    getNeighborhoodFromDB(req.query.id, req.query.format).then((data) => {
+        if(req.query.format == 'xml') {
+            res.writeHead(200, {'Content-Type': 'application/xml'});
+        }
+        else {
+            res.writeHead(200, {'Content-Type': 'application/json'});
+        }
+        res.write(data);
+        res.end();
+    }).catch((err) => {
+        res.writeHead(500, {'Content-Type': 'text/plain'});
+        res.write(err);
+        res.end();
+    })
+});
+
+//Function to get the neighborhood from the DB
 function getNeighborhoodFromDB(id, format) {
     return new Promise((resolve, reject) => {
         let sql = "SELECT * FROM Neighborhoods";
-        if(code != null) {
+        if(id != null) {
             sql = sql + " WHERE neighborhood_number in (" +id+")"
         }
     
@@ -77,10 +114,10 @@ function getNeighborhoodFromDB(id, format) {
                     output[thisNeighborhoodId] = thisNeighborhood['neighborhood_name'];
                 }
                 
-                if (format === "json" || format === null) {
+                if (format == "json" || format == null) {
                     resolve(JSON.stringify(output));
                 }
-                else if (format === "xml") {
+                else if (format == "xml") {
                     resolve(js2xmlparser.parse("neighborhoods", output));
                 }
                 else {
@@ -91,6 +128,26 @@ function getNeighborhoodFromDB(id, format) {
     });
 }
 
+
+//Request to get the incidents from the DB
+app.get("/incidents", (req,res) => {
+    getIncidentsFromDB(req.query.start_date, req.query.end_date, req.query.code, req.query.grid, req.query.neighborhood, req.query.limit, req.query.format).then((data) => {
+        if(req.query.format == 'xml') {
+            res.writeHead(200, {'Content-Type': 'application/xml'});
+        }
+        else {
+            res.writeHead(200, {'Content-Type': 'application/json'});
+        }
+        res.write(data);
+        res.end();
+    }).catch((err) => {
+        res.writeHead(500, {'Content-Type': 'text/plain'});
+        res.write(err);
+        res.end();
+    })
+});
+
+//Function to get the incidents from the DB
 function getIncidentsFromDB(start_date, end_date, code, grid, neighborhood,
     limit, format) {
         return new Promise((resolve, reject) => {
@@ -125,7 +182,6 @@ function getIncidentsFromDB(start_date, end_date, code, grid, neighborhood,
             }
             sql = sql + " LIMIT "+limit;
 
-            console.log("sql");
         
             db.all(sql, (err, data) => {
                 if(err) {
@@ -146,31 +202,108 @@ function getIncidentsFromDB(start_date, end_date, code, grid, neighborhood,
                         };
                     }
                     
-                    if (format === "json" || format === null) {
+                    if (format == "json" || format == undefined) {
                         resolve(JSON.stringify(output));
                     }
-                    else if (format === "xml") {
+                    else if (format == "xml") {
                         resolve(js2xmlparser.parse("incidents", output));
                     }
                     else {
-                        reject("Format was not correct");
+                        reject("Format should be json or xml");
                     }
                 }
             });
         });
     }
 
+// curl -X PUT "http://localhost:8000/new-incident?case_number=30&date=2018-11-11&time=11:11:11.111&incident=Nothing&code=40&police_grid=20&neighborhood_number=30&block=Here"
+app.put("/new-incident", (req,res) => {
+    addIncident(req.query.case_number, req.query.date, req.query.time, req.query.code, req.query.incident, req.query.police_grid,
+        req.query.neighborhood_number, req.query.block).then((data)=>{
+            res.writeHead(200);
+            res.end();
+        }).catch((err)=>{
+            res.writeHead(500, {'Content-Type': 'text/plain'});
+            res.write(err);
+            res.send();
+        });
+});
+
 function addIncident(case_number, date, time, code, incident, police_grid,
     neighborhood_number, block) {
     return new Promise((resolve, reject) => {
+        if(!validateInt(case_number)) {
+            reject("Case number should be an int.");
+            return;
+        }
+        if(!validateInt(code)) {
+            reject("Code should be an int.");
+            return;
+        }
+        if(!validateDate(date)) {
+            reject("Date should be in the format YYYY-MM-DD");
+            return;
+        }
+        if(!validateTime(time)) {
+            reject("Time should be in the format HH:MM:SS.000");
+            return;
+        }
+        if(!validateString(incident)) {
+            reject("Incident should contain a value without any ' characters.");
+            return;
+        }
+        if(!validateString(block)) {
+            reject("Block should contain a value without any ' characters.");
+            return;
+        }
+        if(!validateInt(police_grid)) {
+            reject("Police grid should be an int.");
+            return;
+        }
+        if(!validateInt(neighborhood_number)) {
+            reject("Neighborhood number should be an int.");
+            return;
+        }
+
         let sql = `
-            INSERT INTO Incidents (case_number,date_time,code,incident,police_grid,neighborhood_number,block)
-            VALUES ('${case_number}','${date+"T"+time}',${code},'${incident}',${police_grid},${neighborhood_number},'${block}');
+        INSERT INTO Incidents (case_number,date_time,code,incident,police_grid,neighborhood_number,block)
+        VALUES ('${case_number}','${date+"T"+time}',${code},'${incident}',${police_grid},${neighborhood_number},'${block}');
         `;
-
-
         db.run(sql, (err) => {
+            if(err) {
+                reject("Incident already exists in database");
+            }
+            else{
+                resolve();
+            }
         });
+
+
         
     });
+}
+
+function validateInt(str){
+    if(str == undefined)
+        return false;
+    str = str.toString();
+    return str.match(/^\d+$/);
+}
+
+function validateDate(str){
+    if(str == undefined)
+        return false;
+    return str.match(/^\d{4}-\d{2}-\d{2}$/);
+}
+
+function validateTime(str){
+    if(str == undefined)
+        return false;
+    return str.match(/^\d{2}:\d{2}:\d{2}(\.\d+)?/);
+}
+
+function validateString(str) {
+    if(str == undefined)
+        return false;
+    return str.match(/^[^']*$/);
 }
