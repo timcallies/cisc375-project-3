@@ -79,7 +79,6 @@ function getCodesFromDB(code, format) {
     });
 }
 
-<<<<<<< HEAD
 //Request to get the neighborhoods from the DB
 app.get("/neighborhoods", (req,res) => {
     getNeighborhoodFromDB(req.query.id, req.query.format).then((data) => {
@@ -99,9 +98,6 @@ app.get("/neighborhoods", (req,res) => {
 });
 
 //Function to get the neighborhood from the DB
-=======
-
->>>>>>> 11174965de213d39f1e2722c677f0b9aa56a43a1
 function getNeighborhoodFromDB(id, format) {
     return new Promise((resolve, reject) => {
         let sql = "SELECT * FROM Neighborhoods";
