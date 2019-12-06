@@ -2,6 +2,7 @@
 var fs = require('fs')
 var path = require('path')
 var bodyParser = require('body-parser');
+var cors = require('cors')
 
 // NPM modules
 var express = require('express');
@@ -12,6 +13,7 @@ var bodyParser = require('body-parser');
 // Initialize the server
 var app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cors());
 var port = 8000;
 var server = app.listen(port);
 console.log("Server running on port "+port);
