@@ -14,7 +14,17 @@ var bodyParser = require('body-parser');
 var app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
+
 var port = 8000;
+
+if(process.argv.length > 2 && parseInt(process.argv[2])>=0){
+    port = parseInt(process.argv[2]);
+}
+else {
+    console.log("Port not provided as argument. Using default port (8000)")
+}
+
+
 var server = app.listen(port);
 console.log("Server running on port "+port);
 app.use(bodyParser.urlencoded({extended: true}));
